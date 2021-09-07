@@ -44,7 +44,7 @@ public class SharedConfiguration {
                     JobParameters jobParameters = jobExecution.getJobParameters();
 
                     log.info("jobName :{}, stepName : {}, parameter : {}",
-                            jobInstance.getJobName(),
+                            jobInstance.getJobName(), 
                             stepExecution.getStepName(),
                             jobParameters.getLong("run.id"));
 
