@@ -56,27 +56,6 @@ public class ItemReaderConfiguration {
     }
 
     @Bean
-    public Step jdbcStep() throws Exception {
-        return stepBuilderFactory.get("jdbcStep")
-                .<Person, Person>chunk(10)
-                .reader(this.jdbcCursorItemReader())
-                .writer(this.itemWriter())
-                .build();
-    }
-
-    private JdbcCursorItemReader<Person> jdbcCursorItemReader() throws Exception {
-        JdbcCursorItemReader<Person> itemReader = new JdbcCursorItemReaderBuilder<Person>()
-                .name("jdbcCursorItemReader")
-                .dataSource(dataSource)
-                .sql("select id, name, age, address from person")
-                .rowMapper((rs, rowNum) -> new Person(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4)))
-                .build();
-
-        itemReader.afterPropertiesSet();
-        return itemReader;
-    }
-
-    @Bean
     public Step csvFileStep() throws Exception {
         return stepBuilderFactory.get("csvFileStep")
                 .<Person, Person>chunk(10)
@@ -113,9 +92,30 @@ public class ItemReaderConfiguration {
         return itemReader;
     }
 
+    @Bean
+    public Step jdbcStep() throws Exception {
+        return stepBuilderFactory.get("jdbcStep")
+                .<Person, Person>chunk(10)
+                .reader(this.jdbcCursorItemReader())
+                .writer(this.itemWriter())
+                .build();
+    }
+
+    private JdbcCursorItemReader<Person> jdbcCursorItemReader() throws Exception {
+        JdbcCursorItemReader<Person> itemReader = new JdbcCursorItemReaderBuilder<Person>()
+                .name("jdbcCursorItemReader")
+                .dataSource(dataSource)
+                .sql("select id, name, age, address from person")
+                .rowMapper((rs, rowNum) -> new Person(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4)))
+                .build();
+
+        itemReader.afterPropertiesSet();
+        return itemReader;
+    }
+
     private ItemWriter<Person> itemWriter() {
         return items -> log.info(items.stream()
-                .map(Person::getAddress)
+                .map(Person::getName)
                 .collect(Collectors.joining(", ")));
     }
 
