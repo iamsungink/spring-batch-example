@@ -57,7 +57,7 @@ public class ItemReaderConfiguration {
                 .<Person, Person>chunk(10)
                 .reader(new CustomIteamReader<>(getItems()))
 //                .processor()
-                .writer(itemWriter())
+                .writer(this.itemWriter())
                 .build();
     }
 
