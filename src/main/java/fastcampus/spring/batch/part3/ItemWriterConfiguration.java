@@ -62,7 +62,8 @@ public class ItemWriterConfiguration {
                 .resource(new FileSystemResource("output/test-output.csv"))
                 .lineAggregator(lineAggregator)
                 .headerCallback(writer -> writer.write("id, 이름, 나이, 거주지"))
-                .footerCallback(writer -> writer.write("-------------------------------"))
+                .footerCallback(writer -> writer.write("-------------------------------\n"))
+                .append(true)
                 .build();
 
         itemWriter.afterPropertiesSet();
