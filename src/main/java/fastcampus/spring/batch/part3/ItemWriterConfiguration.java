@@ -10,7 +10,9 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
@@ -19,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +32,13 @@ public class ItemWriterConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final DataSource dataSource;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public ItemWriterConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, DataSource dataSource) {
+    public ItemWriterConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, DataSource dataSource, EntityManagerFactory entityManagerFactory) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.dataSource = dataSource;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Bean
@@ -41,11 +46,13 @@ public class ItemWriterConfiguration {
         return this.jobBuilderFactory.get("itemWriterJob")
                 .incrementer(new RunIdIncrementer())
                 .start(this.csvItemWriterStep())
-                .next(this.jdbcBatchItemWriterStep())
+//                .next(this.jdbcBatchItemWriterStep())
+                .next(this.jpaItemWriterStep())
                 .build();
     }
 
-    private Step csvItemWriterStep() throws Exception {
+    @Bean
+    public Step csvItemWriterStep() throws Exception {
         return this.stepBuilderFactory.get("csvItemWriterStep")
                 .<Person, Person>chunk(10)
                 .reader(this.itemReader())
@@ -77,7 +84,8 @@ public class ItemWriterConfiguration {
         return itemWriter;
     }
 
-    private Step jdbcBatchItemWriterStep(){
+    @Bean
+    public Step jdbcBatchItemWriterStep(){
         return stepBuilderFactory.get("jdbcBatchItemWriterStep")
                 .<Person, Person>chunk(10)
                 .reader(this.itemReader())
@@ -97,6 +105,27 @@ public class ItemWriterConfiguration {
         return itemWriter;
     }
 
+    @Bean
+    public Step jpaItemWriterStep() throws Exception {
+        return stepBuilderFactory.get("jpaItemWriterStep")
+                .<Person, Person>chunk(10)
+                .reader(this.itemReader())
+//                .processor()
+                .writer(this.jpaItemWriter())
+                .build();
+    }
+
+    private ItemWriter<Person> jpaItemWriter() throws Exception {
+        JpaItemWriter<Person> itemWriter = new JpaItemWriterBuilder<Person>()
+                .entityManagerFactory(entityManagerFactory)
+//                .usePersist(true)
+                .build();
+
+        itemWriter.afterPropertiesSet();
+
+        return itemWriter;
+    }
+
     private ItemReader<Person> itemReader() {
         return new CustomIteamReader<>(this.getItems());
     }
@@ -105,7 +134,7 @@ public class ItemWriterConfiguration {
         List<Person> items = new ArrayList<>();
 
         for (int i = 0; i < 100; i++) {
-            items.add(new Person(i + 1, "test name" + i, "test age", "test address"));
+            items.add(new Person("test name" + i, "test age", "test address"));
         }
 
         return items;
