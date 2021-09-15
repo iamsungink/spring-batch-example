@@ -9,4 +9,4 @@ spring:
       data-locations: classpath:person.sql
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
