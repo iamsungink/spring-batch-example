@@ -1,5 +1,6 @@
 package fastcampus.spring.batch.part4;
 
+import fastcampus.spring.batch.part5.JobParametersDecide;
 import fastcampus.spring.batch.part5.OrderStatistics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -58,8 +59,11 @@ public class UserConfiguration {
                 .incrementer(new RunIdIncrementer())
                 .start(this.saveUserStep())
                 .next(this.userLevelUpStep())
-                .next(this.orderStatisticsStep(null))
                 .listener(new LevelUpJobExecutionListner(userRepository))
+                .next(new JobParametersDecide("date"))
+                .on(JobParametersDecide.CONTINUE.getName())
+                .to(this.orderStatisticsStep(null))
+                .build()
                 .build();
     }
 
