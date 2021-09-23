@@ -25,7 +25,8 @@ public class User {
 
 //    private int totalAmount;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+//    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private List<Orders> orders;
 
